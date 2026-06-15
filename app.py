@@ -1091,7 +1091,7 @@ st.markdown("""
 <div class="footer">
   <div class="footer-logo">Herramientas <span>Financieras</span> Chubut</div>
   <div class="footer-sub">
-    2804482606 · ✉️ <a href="mailto:herramientasfinancieraschubut@gmail.com">herramientasfinancieraschubut@gmail.com</a><br>
+     <a href="mailto:herramientasfinancieraschubut@gmail.com">herramientasfinancieraschubut@gmail.com</a><br>
     <span style="color:#2A3D55;">Las líneas son de carácter orientativo. Consulte siempre a la entidad correspondiente.</span>
   </div>
 </div>
