@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import requests
 from datetime import date, datetime
+import os
+
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN DE PÁGINA
@@ -685,7 +687,7 @@ with tab3:
 # ════════════════════════════════════════════
 with tab4:
 
-    SHEET_ID = "1BDan8C8ZMtVJgtN2EW3TB4LCmboK8rcN5SI7oqMkqlU"
+    SHEET_ID = os.getenv("SHEET_ID", "1BDan8C8ZMtVJgtN2EW3TB4LCmboK8rcN5SI7oqMkqlU")
     CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0"
 
     st.markdown(f"""
