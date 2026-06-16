@@ -530,14 +530,14 @@ for icon, name in zip(ICONS, TABS):
     active = "active" if st.session_state.tab == name else ""
     nav_links += f'<button class="nav-link {active}" onclick="">{name}</button>'
 
+# Logo arriba (sin links — los links reales están en la fila de botones de abajo)
 st.markdown(f"""
 <div class="nav-bar">
   <div class="nav-logo">Herramientas <span>Financieras</span> Chubut</div>
-  <div class="nav-links">{nav_links}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# Nav real con Streamlit
+# Nav funcional — única fila de navegación
 cols = st.columns(len(TABS))
 for i, (icon, name) in enumerate(zip(ICONS, TABS)):
     with cols[i]:
