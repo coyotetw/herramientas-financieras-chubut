@@ -1006,16 +1006,15 @@ elif tab == "Legislación":
 # ════════════════════════════════════
 # TAB: RAÍZ EMPRENDEDORA (solo administrador)
 # ════════════════════════════════════
-elif tab == "Raíz Emprendedora"::
-    st.markdown('<div class="section">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Raíz Emprendedora</div><div class="section-rule"></div>', unsafe_allow_html=True)
-    st.markdown(
-        '<p style="font-size:12px;color:#4A6080;margin-bottom:24px;">'
-        'Módulo en desarrollo — visible solo en sesión de administrador.</p>',
-        unsafe_allow_html=True
+elif tab == "Raíz Emprendedora":
+    import plotly.express as px
+    import plotly.graph_objects as go
+    import numpy as np
+    from data_loader_raiz import (
+        cargar_base_raiz, cargar_bcra_detalle_raiz,
+        insertar_participante_raiz, actualizar_participante_raiz,
+        EVENTOS_LABELS, ORDEN_SITUACION, COLOR_SIT
     )
-    st.info("Acá va el dashboard de la base consolidada de Raíz Emprendedora (en construcción).")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ── FOOTER ──
