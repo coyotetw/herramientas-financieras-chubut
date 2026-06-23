@@ -44,12 +44,15 @@ COLOR_SIT = {
 
 
 def _get_conn():
-    """Usa la misma DATABASE_URL que el resto de la app."""
-    url = os.getenv("DATABASE_URL", st.secrets.get("DATABASE_URL", ""))
+    url = os.getenv("DATABASE_URL", "")
+    if not url:
+        try:
+            url = st.secrets["DATABASE_URL"]
+        except:
+            raise Exception("DATABASE_URL no configurada")
     return psycopg2.connect(url, sslmode="require", connect_timeout=20)
-
-
 @st.cache_data(ttl=600, show_spinner="Cargando Raíz Emprendedora...")
+
 def cargar_base_raiz():
     conn = _get_conn()
 
