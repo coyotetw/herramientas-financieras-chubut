@@ -1079,7 +1079,7 @@ elif tab == "Raíz Emprendedora":
     st.markdown("""
     <div class="raiz-header">
       <h2>🌱 RAÍZ EMPRENDEDORA</h2>
-      <p>Dashboard de Gestión · Dirección de Promoción de las Inversiones · Ministerio de Producción · Chubut</p>
+    
     </div>
     """, unsafe_allow_html=True)
 
