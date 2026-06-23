@@ -1006,7 +1006,7 @@ elif tab == "Legislación":
 # ════════════════════════════════════
 # TAB: RAÍZ EMPRENDEDORA (solo administrador)
 # ════════════════════════════════════
-elif tab == "Raíz Emprendedora":
+elif tab == "raiz_tab_para_app.py":
     st.markdown('<div class="section">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Raíz Emprendedora</div><div class="section-rule"></div>', unsafe_allow_html=True)
     st.markdown(
