@@ -1010,9 +1010,6 @@ elif tab == "Legislación":
 # TAB: RAÍZ EMPRENDEDORA (solo administrador)
 # ════════════════════════════════════
 elif tab == "Raíz Emprendedora":
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import numpy as np
     from data_loader_raiz import (
         cargar_base_raiz, cargar_bcra_detalle_raiz,
         insertar_participante_raiz, actualizar_participante_raiz,
