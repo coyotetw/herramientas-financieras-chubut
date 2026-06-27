@@ -605,43 +605,77 @@ elif tab == "Observatorio":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Módulos disponibles</div><div class="section-rule"></div>', unsafe_allow_html=True)
+    if es_admin():
+        # Sub-navegación dentro del Observatorio
+        obs_modulo = st.radio(
+            "Módulo:",
+            ["Inicio", "Análisis Bancario & FODA"],
+            horizontal=True,
+            label_visibility="collapsed",
+        )
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if es_admin():
+        if obs_modulo == "Análisis Bancario & FODA":
+            from observatorio_bcra import render_observatorio_bcra
+            render_observatorio_bcra()
+
+        else:
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">Módulos disponibles</div><div class="section-rule"></div>', unsafe_allow_html=True)
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("""
+                <div class="obs-card">
+                  <div class="obs-card-icon" style="color:#E85D36;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">BCR</div>
+                  <div class="obs-card-title">Análisis Bancario & FODA</div>
+                  <div class="obs-card-desc">Diagnóstico del sistema BCRA sobre el universo Raíz Emprendedora. Ranking de entidades, composición de cartera y FODA estratégico con foco en Banco del Chubut.</div>
+                  <span class="coming-soon" style="background:rgba(52,211,153,0.15);color:#34D399;border-color:rgba(52,211,153,0.3);">ACTIVO</span>
+                </div>""", unsafe_allow_html=True)
+            with col2:
+                st.markdown("""
+                <div class="obs-card">
+                  <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">RE</div>
+                  <div class="obs-card-title">Raíz Emprendedora</div>
+                  <div class="obs-card-desc">Dashboard interactivo de la base de participantes del programa provincial de mujeres emprendedoras. Composición territorial, etaria y de formalización.</div>
+                  <span class="coming-soon">EN DESARROLLO</span>
+                </div>""", unsafe_allow_html=True)
+            with col3:
+                st.markdown("""
+                <div class="obs-card">
+                  <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">EMP</div>
+                  <div class="obs-card-title">Registro de Empresas</div>
+                  <div class="obs-card-desc">Visualización del ecosistema empresarial de Chubut: sectores, distribución territorial, antigüedad y acceso al financiamiento formal.</div>
+                  <span class="coming-soon">EN DESARROLLO</span>
+                </div>""", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    else:
+        st.markdown('<div class="section">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Módulos disponibles</div><div class="section-rule"></div>', unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown("""
+            <div class="obs-card" style="opacity:0.5;">
+              <div class="obs-card-icon" style="color:#4A6080;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">🔒</div>
+              <div class="obs-card-title">Análisis Bancario & FODA</div>
+              <div class="obs-card-desc">Este módulo requiere acceso de administrador.</div>
+            </div>""", unsafe_allow_html=True)
+        with col2:
             st.markdown("""
             <div class="obs-card">
               <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">RE</div>
               <div class="obs-card-title">Raíz Emprendedora</div>
-              <div class="obs-card-desc">Dashboard interactivo de la base de participantes del programa provincial de mujeres emprendedoras. Composición territorial, etaria y de formalización.</div>
+              <div class="obs-card-desc">Dashboard interactivo de la base de participantes del programa.</div>
               <span class="coming-soon">EN DESARROLLO</span>
             </div>""", unsafe_allow_html=True)
-        else:
+        with col3:
             st.markdown("""
-            <div class="obs-card" style="opacity:0.5;">
-              <div class="obs-card-icon" style="color:#4A6080;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">🔒</div>
-              <div class="obs-card-title">Módulo restringido</div>
-              <div class="obs-card-desc">Este módulo requiere acceso de administrador.</div>
+            <div class="obs-card">
+              <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">EMP</div>
+              <div class="obs-card-title">Registro de Empresas</div>
+              <div class="obs-card-desc">Visualización del ecosistema empresarial de Chubut.</div>
+              <span class="coming-soon">EN DESARROLLO</span>
             </div>""", unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div class="obs-card">
-          <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">EMP</div>
-          <div class="obs-card-title">Registro de Empresas</div>
-          <div class="obs-card-desc">Visualización del ecosistema empresarial de Chubut: sectores, distribución territorial, antigüedad y acceso al financiamiento formal.</div>
-          <span class="coming-soon">EN DESARROLLO</span>
-        </div>""", unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div class="obs-card">
-          <div class="obs-card-icon" style="color:#F5C518;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">BCR</div>
-          <div class="obs-card-title">Central de Deudas</div>
-          <div class="obs-card-desc">Consulta por CUIT de situación en el sistema financiero (BCRA), constancia de inscripción (ARCA) y evolución histórica de deuda en los últimos 24 meses.</div>
-          <span class="coming-soon">EN DESARROLLO</span>
-        </div>""", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ════════════════════════════════════
