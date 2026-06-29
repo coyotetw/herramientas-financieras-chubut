@@ -300,7 +300,9 @@ def _fig_chubut_vs_resto(df: pd.DataFrame) -> go.Figure:
         .unstack(fill_value=0)
     )
     cross_pct = cross.div(cross.sum(axis=1), axis=0) * 100
-    cross_pct.index = [SIT_LABELS.get(i, str(i)) for i in cross_pct.index]
+    cross_pct.index = pd.Index(
+        [SIT_LABELS.get(i, str(i)) for i in cross_pct.index], name="situacion"
+    )
     cross_pct = cross_pct.reset_index()
     cross_pct.columns.name = None
 
@@ -390,11 +392,27 @@ def calcular_foda(df: pd.DataFrame, resumen: pd.DataFrame, df_raiz: pd.DataFrame
     irrecuperable = resumen[resumen["peor_situacion"] == 5]
     pct_irrec = len(irrecuperable) / total_cuits * 100 if total_cuits > 0 else 0
 
+    # Buenos pagadores (sit. 0 y 1) — el dato clave de Raíz
+    buenos = resumen[resumen["peor_situacion"].isin([0, 1])]
+    pct_buenos = len(buenos) / total_cuits * 100 if total_cuits > 0 else 0
+    n_buenos = len(buenos)
+
     # Sin historial BCRA (potencial bancarizable)
     set_bcra = set(df["cuit"].astype(str))
     set_raiz = set(df_raiz["cuit"].astype(str))
     sin_historial = len(set_raiz - set_bcra)
     pct_sin_historial = sin_historial / len(set_raiz) * 100 if len(set_raiz) > 0 else 0
+
+    # Informalidad (desde df_raiz si tiene columna formalidad)
+    total_raiz = len(df_raiz)
+    informales = 0
+    pct_informal = 0.0
+    if "formalidad" in df_raiz.columns:
+        informales = df_raiz["formalidad"].isna().sum() + (
+            df_raiz["formalidad"].str.strip().str.lower().isin(["informal", "sin formalidad", "no", ""])
+            .sum() if df_raiz["formalidad"].notna().any() else 0
+        )
+        pct_informal = informales / total_raiz * 100 if total_raiz > 0 else 0
 
     # CUITs normales con Banco Chubut (potencial fidelización)
     normales_chubut = df[df["es_chubut"] & (df["situacion"] == 1)]["cuit"].nunique()
@@ -413,49 +431,52 @@ def calcular_foda(df: pd.DataFrame, resumen: pd.DataFrame, df_raiz: pd.DataFrame
         "promedio_sistema": promedio_sistema,
         "pct_mora": pct_mora,
         "pct_irrec": pct_irrec,
+        "n_buenos": n_buenos,
+        "pct_buenos": pct_buenos,
         "sin_historial": sin_historial,
         "pct_sin_historial": pct_sin_historial,
+        "pct_informal": pct_informal,
         "normales_chubut": normales_chubut,
         "fintech_cuits": fintech_cuits,
     }
 
     foda = {
         "fortalezas": [
-            f"Banco del Chubut tiene el **mayor monto promedio de deuda por cliente** del sistema: **${promedio_chubut:,.0f}** — supera al promedio general (${promedio_sistema:,.0f}), lo que refleja relaciones crediticias más profundas.",
-            f"El banco es **acreedor de {con_chubut:,} CUITs** del universo analizado, lo que le da penetración territorial significativa en el ecosistema emprendedor.",
-            f"Con **${monto_chubut/1_000_000:.1f}M** en cartera, el Banco Chubut concentra el mayor monto absoluto entre todas las entidades financieras del sistema.",
+            f"**Buenos índices de pago**: el **{pct_buenos:.0f}% de las participantes** ({n_buenos:,} emprendedoras) tiene situación Normal o sin deuda en el BCRA — cuando se toma un crédito, se paga.",
+            f"**Trabajo en red y entramado territorial**: las emprendedoras Raíz funcionan en comunidad, con vínculos entre sí y con el Estado provincial, lo que reduce el riesgo individual y fortalece el capital social.",
+            "**Motivación y vocación emprendedora**: hay ganas. El perfil de las participantes combina voluntad de crecer con arraigo territorial — base difícil de replicar en otros programas.",
         ],
         "oportunidades": [
-            f"**{sin_historial:,} CUITs** ({pct_sin_historial:.0f}% del programa Raíz) no tienen historial BCRA: son emprendedoras sin acceso al crédito formal — **potencial de bancarización directa**.",
-            f"**{normales_chubut:,} clientes actuales** del Banco Chubut tienen situación Normal (al día): base sólida para productos de **up-selling y fidelización** (seguros, inversiones, crédito ampliado).",
-            f"El crecimiento de Raíz Emprendedora como programa provincial genera un pipeline continuo de nuevas emprendedoras que pueden ser captadas desde el inicio de su actividad.",
+            f"**{sin_historial:,} participantes** ({pct_sin_historial:.0f}% del programa) no tienen historial BCRA — son emprendedoras que nunca accedieron al crédito formal: **potencial de bancarización virgen**.",
+            "**Creciente interés en el emprendedurismo**: el ecosistema está activo. Hay gente pensando en emprender y buscando oportunidades — la demanda de herramientas financieras existe.",
+            "**Palanca de política pública**: el Estado puede diseñar productos específicos (garantías, tasas diferenciales, microcréditos) que complementen lo que el mercado no ofrece a este segmento.",
         ],
         "debilidades": [
-            f"El **{pct_mora:.1f}% de los CUITs** del universo tiene situación de mora (situación ≥ 2), con un **{pct_irrec:.1f}% en situación Irrecuperable** — riesgo de cartera que requiere gestión activa.",
-            f"De los {con_chubut:,} clientes del Banco Chubut, una proporción presenta deuda en situaciones de riesgo — señal de posible sobreendeudamiento o falta de acompañamiento crediticio.",
-            "Ausencia de productos financieros específicos para el perfil de emprendedora: montos bajos, garantías limitadas, ciclos de ingreso irregulares.",
+            f"**Alta informalidad**: una parte significativa de las participantes opera sin registración formal, lo que les impide acceder a crédito institucional y dificulta la medición del impacto real del programa.",
+            f"**Falta de educación financiera**: muchas emprendedoras no conocen el sistema crediticio, cómo funciona el BCRA, ni cómo construir historial. Esto limita su capacidad de aprovechar oportunidades financieras.",
+            f"El **{pct_mora:.1f}% presenta mora activa** en el sistema financiero — señal de que el acceso al crédito sin acompañamiento puede agravar la situación en lugar de mejorarla.",
         ],
         "amenazas": [
-            f"Las **fintech** (Mercado Libre, Tarjeta Naranja) tienen presencia en **{fintech_cuits:,} CUITs** del sistema — superando al Banco Chubut en cobertura, con procesos de crédito 100% digitales y sin sucursales.",
-            "La informalidad laboral y productiva dificulta la generación de historial crediticio para nuevas emprendedoras, reduciendo la base elegible para productos bancarios tradicionales.",
-            "El contexto macroeconómico (inflación, volatilidad del tipo de cambio) deteriora la capacidad de repago y eleva el riesgo de mora en carteras PyME.",
+            "**Temuización de la economía**: la llegada de productos importados ultra-baratos (plataformas globales de comercio) comprime los márgenes del comercio y la producción local, amenazando directamente la viabilidad de los emprendimientos.",
+            "**Cambios en gustos y preferencias de los consumidores**: las tendencias de consumo cambian rápido. Los emprendimientos que no logran adaptarse pierden mercado frente a opciones globales o digitales.",
+            f"Las **fintech** (Mercado Libre, Naranja X) ya operan en **{fintech_cuits:,} CUITs** del ecosistema con crédito 100% digital, sin sucursales y onboarding inmediato — presión creciente sobre el banco tradicional.",
         ],
         "estrategias": {
             "FO": [
-                f"**Programa 'Primera cuenta Raíz'**: aprovechar la relación institucional con el programa para ofrecer cuentas y microcréditos a los {sin_historial:,} CUITs sin historial BCRA — Banco Chubut como puerta de entrada al sistema financiero.",
-                f"**Plan de fidelización para los {normales_chubut:,} clientes normales**: ofrecer mejora de límites, acceso a Fondo de Garantías provincial y productos de ahorro con tasa preferencial.",
-            ],
-            "FA": [
-                "**Digitalización del onboarding**: desarrollar proceso 100% digital de apertura de cuenta y solicitud de crédito para competir con fintech en velocidad y conveniencia, manteniendo el diferencial de banco público con presencia territorial.",
-                "**Alianza con programa Raíz como canal de adquisición**: cada evento del programa es una oportunidad de captación — instalar presencia institucional en ferias y capacitaciones.",
+                f"**Propuesta bancaria 'Buenas clientas Raíz'** *(Potenciar)*: aprovechar los buenos índices de pago ({pct_buenos:.0f}% en situación normal) para ofrecer a las {n_buenos:,} emprendedoras con perfil positivo una línea de crédito con aval del programa. Usar el entramado como garantía solidaria.",
+                f"**Canal Raíz como captación continua** *(Potenciar)*: cada evento, feria y capacitación del programa es un punto de contacto. El Banco Chubut puede instalar presencia institucional y captar nuevas clientas desde el inicio de su actividad emprendedora.",
             ],
             "DO": [
-                f"**Crédito con garantía provincial para emprendedoras**: diseñar producto específico que acepte garantías no tradicionales (facturación, participación en programas) para reducir la barrera de acceso a los {sin_historial:,} CUITs sin historial.",
-                "**Acompañamiento crediticio activo**: ante el nivel de mora, implementar alertas tempranas y gestión proactiva (refinanciación, períodos de gracia) para reducir el pasaje a irrecuperable.",
+                f"**Crédito con garantía provincial para la informalidad** *(Mejorar)*: diseñar productos que acepten participación en Raíz como garantía no tradicional. Los {sin_historial:,} CUITs sin historial son candidatas ideales si el Estado respalda el riesgo inicial.",
+                "**Educación financiera integrada al programa** *(Mejorar)*: incorporar módulos de gestión financiera personal y acceso al crédito dentro de los eventos Raíz. Reduce la brecha de conocimiento y mejora la calidad de los futuros solicitantes de crédito.",
+            ],
+            "FA": [
+                "**Diferenciación por lo local y la cercanía** *(Proteger)*: frente a las fintech y las plataformas globales, el diferencial del banco público provincial es la presencia territorial, el conocimiento del contexto y la relación institucional con el programa. Apostar fuerte a eso.",
+                "**Red como escudo ante la temuización** *(Proteger)*: fomentar desde el programa la diferenciación por calidad, producción local y redes de comercialización colaborativa — los emprendimientos en red resisten mejor la presión de los precios importados.",
             ],
             "DA": [
-                "**Segmentación de riesgo con datos BCRA**: usar el historial de situación (24 meses disponibles) para construir un score interno que diferencie el riesgo real de cada emprendedora y evite sobreexposición.",
-                "**Educación financiera integrada al programa Raíz**: reducir la mora estructural invirtiendo en capacitación en gestión de deuda como parte de los eventos del programa, generando mejores perfiles crediticios futuros.",
+                "**Score de riesgo propio para emprendedoras informales** *(Transformar)*: construir un índice interno que combine participación en Raíz, historial BCRA y asistencia a eventos. Permite otorgar crédito sin historial formal, reduciendo la exclusión sin asumir riesgo ciego.",
+                "**Formalización progresiva como requisito de acceso** *(Transformar)*: articular con AFIP/ARCA para que el crédito Raíz exija un primer paso de formalización (monotributo social, etc.). Reduce la informalidad y blinda a las emprendedoras ante la volatilidad económica.",
             ],
         },
         "metricas": metricas,
@@ -616,11 +637,11 @@ def render_observatorio_bcra():
     st.markdown("""
     <div style="font-size:18px;font-weight:700;font-family:'Barlow Condensed',sans-serif;
          color:#EDF4F8;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">
-      4 · FODA Estratégico — Banco del Chubut en el Ecosistema Emprendedor
+      4 · FODA Estratégico — Raíz Emprendedora & Sistema Bancario Chubut
     </div>
     <div style="height:2px;background:rgba(91,184,212,0.25);margin-bottom:8px;"></div>
     <div style="font-size:12px;color:#7A9BB5;margin-bottom:20px;">
-      Generado automáticamente a partir de los datos reales del sistema BCRA y el programa Raíz Emprendedora.
+      Análisis data-driven: los datos del BCRA alimentan las Fortalezas y Debilidades · las estrategias integran la visión del equipo Raíz.
     </div>
     """, unsafe_allow_html=True)
 
@@ -662,13 +683,13 @@ def render_observatorio_bcra():
     </div>
     """, unsafe_allow_html=True)
 
-    est_tabs = st.tabs(["FO — Crecer", "FA — Defender", "DO — Corregir", "DA — Sobrevivir"])
+    est_tabs = st.tabs(["FO — Potenciar", "DO — Mejorar", "FA — Proteger", "DA — Transformar"])
 
     estrategia_meta = {
-        "FO": ("Fortalezas × Oportunidades", "Aprovechar fortalezas para capturar oportunidades", C_VERDE),
-        "FA": ("Fortalezas × Amenazas", "Usar fortalezas para neutralizar amenazas", C_AZUL2),
-        "DO": ("Debilidades × Oportunidades", "Superar debilidades aprovechando oportunidades", C_DORADO),
-        "DA": ("Debilidades × Amenazas", "Minimizar debilidades y evitar amenazas", C_NARANJA),
+        "FO": ("Fortalezas × Oportunidades", "Usar las F para aprovechar las O", C_VERDE),
+        "DO": ("Debilidades × Oportunidades", "Superar las D aprovechando las O", C_DORADO),
+        "FA": ("Fortalezas × Amenazas", "Usar las F para evitar las A", C_AZUL2),
+        "DA": ("Debilidades × Amenazas", "Reducir las D para evitar las A", C_NARANJA),
     }
 
     for tab_obj, (key, (nombre, descripcion, color)) in zip(est_tabs, estrategia_meta.items()):
