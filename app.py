@@ -622,7 +622,7 @@ elif tab == "Observatorio":
         else:
             st.markdown('<div class="section">', unsafe_allow_html=True)
             st.markdown('<div class="section-title">Módulos disponibles</div><div class="section-rule"></div>', unsafe_allow_html=True)
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             with col1:
                 st.markdown("""
                 <div class="obs-card">
@@ -632,14 +632,6 @@ elif tab == "Observatorio":
                   <span class="coming-soon" style="background:rgba(52,211,153,0.15);color:#34D399;border-color:rgba(52,211,153,0.3);">ACTIVO</span>
                 </div>""", unsafe_allow_html=True)
             with col2:
-                st.markdown("""
-                <div class="obs-card">
-                  <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">RE</div>
-                  <div class="obs-card-title">Raíz Emprendedora</div>
-                  <div class="obs-card-desc">Dashboard interactivo de la base de participantes del programa provincial de mujeres emprendedoras. Composición territorial, etaria y de formalización.</div>
-                  <span class="coming-soon">EN DESARROLLO</span>
-                </div>""", unsafe_allow_html=True)
-            with col3:
                 st.markdown("""
                 <div class="obs-card">
                   <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">EMP</div>
@@ -1186,12 +1178,14 @@ elif tab == "Raíz Emprendedora":
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
     # ── Tabs internos ─────────────────────────────────────────────────
-    subtab1, subtab2, subtab3, subtab4, subtab5, subtab6 = st.tabs([
+    subtab1, subtab2, subtab3, subtab4, subtab5, subtab6, subtab7, subtab8 = st.tabs([
         "📊 Formalidad y BCRA",
         "📅 Eventos",
         "📍 Territorio",
         "🔍 Explorador",
         "🏦 Análisis Bancario",
+        "📋 FODA & Estrategias",
+        "📄 Exportar PDF",
         "✏️ Gestión",
     ])
 
@@ -1390,8 +1384,8 @@ elif tab == "Raíz Emprendedora":
         st.download_button("⬇️ Descargar selección como CSV",
             data=csv, file_name="raiz_seleccion.csv", mime="text/csv")
 
-    # ── SUBTAB 6: Gestión ─────────────────────────────────────────────
-    with subtab6:
+    # ── SUBTAB 8: Gestión ─────────────────────────────────────────────
+    with subtab8:
         st.markdown('<div class="sec-re">Agregar participante</div>', unsafe_allow_html=True)
 
         with st.form("re_form_nuevo"):
@@ -1465,9 +1459,29 @@ elif tab == "Raíz Emprendedora":
 
     # ── SUBTAB 5: Análisis Bancario ───────────────────────────────────
     with subtab5:
-        render_analisis_bancario_raiz(df)  # df = participantes ya filtrados por los filtros de arriba
+        render_analisis_bancario_raiz(df)
 
-    # ── SUBTAB 6: Gestión (era subtab5) ──────────────────────────────
+    # ── SUBTAB 6: FODA & Estrategias ─────────────────────────────────
+    with subtab6:
+        from raiz_foda_pdf import render_foda_raiz
+        _foda_result = render_foda_raiz(df)
+        if _foda_result:
+            st.session_state["raiz_foda_cache"] = _foda_result
+
+    # ── SUBTAB 7: Exportar PDF ────────────────────────────────────────
+    with subtab7:
+        from raiz_foda_pdf import render_export_pdf
+        _foda_para_pdf = st.session_state.get("raiz_foda_cache", None)
+        # Descripción de filtros activos
+        _filtros_activos = []
+        if f_formal != "Todas":  _filtros_activos.append(f"Formalidad: {f_formal}")
+        if f_sit    != "Todas":  _filtros_activos.append(f"BCRA: {f_sit}")
+        if f_loc    != "Todas":  _filtros_activos.append(f"Localidad: {f_loc}")
+        if f_reg    != "Todos":  _filtros_activos.append(f"Completitud: {f_reg}")
+        _filtros_desc = " · ".join(_filtros_activos) if _filtros_activos else "Sin filtros (base completa)"
+        render_export_pdf(df, _foda_para_pdf, _filtros_desc)
+
+    # ── SUBTAB 8: Gestión ─────────────────────────────────────────────
     # ── Botón recargar ────────────────────────────────────────────────
     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
     if st.button("🔄 Recargar datos Raíz", key="re_reload"):

@@ -1,0 +1,74 @@
+[theme]
+base = "dark"
+
+# Paleta institucional Chubut — azul profundo + teal + naranja
+primaryColor        = "#5BB8D4"          # teal-blue principal
+backgroundColor     = "#0B1C37"          # azul marino profundo
+secondaryBackgroundColor = "#102244"     # ligeramente más claro
+codeBackgroundColor = "#0E2040"
+textColor           = "#EDF4F8"          # blanco suave
+linkColor           = "#5BB8D4"
+borderColor         = "#1E3A5F"
+codeTextColor       = "#C8D8E8"
+showWidgetBorder    = true
+showSidebarBorder   = true
+baseRadius          = "6px"
+buttonRadius        = "6px"
+linkUnderline       = false
+
+# Tipografía — Inter para cuerpo, Barlow Condensed para headings
+font        = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "'Barlow+Condensed':https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&display=swap"
+codeFont    = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+baseFontSize    = 14
+baseFontWeight  = 400
+codeFontSize    = "13px"
+headingFontSizes    = ["30px", "24px", "20px", "17px", "14px", "12px"]
+headingFontWeights  = [700, 700, 600, 600, 500, 500]
+
+# Semáforo financiero
+greenColor  = "#34D399"   # situación normal / ok
+redColor    = "#EF4444"   # irrecuperable
+yellowColor = "#F4B41A"   # riesgo bajo/medio
+orangeColor = "#E85D36"   # riesgo alto
+blueColor   = "#5BB8D4"   # informativo
+violetColor = "#A78BFA"   # acento
+grayColor   = "#4A6080"   # neutro / secundario
+
+# Colores de gráficos categóricos (Plotly, Altair)
+chartCategoricalColors = [
+    "#5BB8D4",
+    "#34D399",
+    "#E85D36",
+    "#F4B41A",
+    "#A78BFA",
+    "#1B7F91",
+    "#EF4444",
+    "#94A3B8",
+]
+
+# Heatmap secuencial (azul → naranja)
+chartSequentialColors = [
+    "#0B1C37",
+    "#0E2F52",
+    "#0E4D5F",
+    "#1B7F91",
+    "#5BB8D4",
+    "#8DD4E6",
+    "#F4B41A",
+    "#E8A020",
+    "#E85D36",
+    "#EF4444",
+]
+
+# Dataframe
+dataframeBorderColor            = "#1E3A5F"
+dataframeHeaderBackgroundColor  = "#102244"
+
+[theme.sidebar]
+backgroundColor             = "#090F1F"
+secondaryBackgroundColor    = "#0B1C37"
+codeBackgroundColor         = "#0B1C37"
+textColor                   = "#C8D8E8"
+borderColor                 = "#1E3A5F"
+primaryColor                = "#5BB8D4"
