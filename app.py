@@ -11,6 +11,7 @@ try:
 except ImportError:
     alt = None
 import db
+from dashboard_propuesta_bancaria import render_analisis_bancario_raiz
 
 st.set_page_config(
     page_title="Herramientas Financieras Chubut",
@@ -651,7 +652,7 @@ elif tab == "Observatorio":
     else:
         st.markdown('<div class="section">', unsafe_allow_html=True)
         st.markdown('<div class="section-title">Módulos disponibles</div><div class="section-rule"></div>', unsafe_allow_html=True)
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
             <div class="obs-card" style="opacity:0.5;">
@@ -661,19 +662,10 @@ elif tab == "Observatorio":
             </div>""", unsafe_allow_html=True)
         with col2:
             st.markdown("""
-            <div class="obs-card">
-              <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">RE</div>
-              <div class="obs-card-title">Raíz Emprendedora</div>
-              <div class="obs-card-desc">Dashboard interactivo de la base de participantes del programa.</div>
-              <span class="coming-soon">EN DESARROLLO</span>
-            </div>""", unsafe_allow_html=True)
-        with col3:
-            st.markdown("""
-            <div class="obs-card">
-              <div class="obs-card-icon" style="color:#5BB8D4;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">EMP</div>
-              <div class="obs-card-title">Registro de Empresas</div>
-              <div class="obs-card-desc">Visualización del ecosistema empresarial de Chubut.</div>
-              <span class="coming-soon">EN DESARROLLO</span>
+            <div class="obs-card" style="opacity:0.5;">
+              <div class="obs-card-icon" style="color:#4A6080;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.1em;">🔒</div>
+              <div class="obs-card-title">Análisis Bancario completo</div>
+              <div class="obs-card-desc">El análisis bancario interactivo está disponible dentro de Raíz Emprendedora para administradores.</div>
             </div>""", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1194,11 +1186,12 @@ elif tab == "Raíz Emprendedora":
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
     # ── Tabs internos ─────────────────────────────────────────────────
-    subtab1, subtab2, subtab3, subtab4, subtab5 = st.tabs([
+    subtab1, subtab2, subtab3, subtab4, subtab5, subtab6 = st.tabs([
         "📊 Formalidad y BCRA",
         "📅 Eventos",
         "📍 Territorio",
         "🔍 Explorador",
+        "🏦 Análisis Bancario",
         "✏️ Gestión",
     ])
 
@@ -1397,8 +1390,8 @@ elif tab == "Raíz Emprendedora":
         st.download_button("⬇️ Descargar selección como CSV",
             data=csv, file_name="raiz_seleccion.csv", mime="text/csv")
 
-    # ── SUBTAB 5: Gestión ─────────────────────────────────────────────
-    with subtab5:
+    # ── SUBTAB 6: Gestión ─────────────────────────────────────────────
+    with subtab6:
         st.markdown('<div class="sec-re">Agregar participante</div>', unsafe_allow_html=True)
 
         with st.form("re_form_nuevo"):
@@ -1470,6 +1463,11 @@ elif tab == "Raíz Emprendedora":
                         except Exception as e:
                             st.error(f"Error: {e}")
 
+    # ── SUBTAB 5: Análisis Bancario ───────────────────────────────────
+    with subtab5:
+        render_analisis_bancario_raiz(df)  # df = participantes ya filtrados por los filtros de arriba
+
+    # ── SUBTAB 6: Gestión (era subtab5) ──────────────────────────────
     # ── Botón recargar ────────────────────────────────────────────────
     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
     if st.button("🔄 Recargar datos Raíz", key="re_reload"):
