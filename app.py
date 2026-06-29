@@ -710,8 +710,9 @@ elif tab == "Consulta CUIT":
                     f'<div style="background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);'
                     f'border-radius:3px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#F5C518;'
                     f'font-family:Space Mono,monospace;">'
-                    f'YA CONSULTADO ANTES — primera vez: {previo["primera_consulta"].strftime("%d/%m/%Y %H:%M")} · '
-                    f'veces consultado: {previo["veces_consultado"]} · se vuelve a consultar para traer datos frescos.</div>',
+                    f'YA CONSULTADO ANTES — primera vez: '
+                    f'{previo["primera_consulta"].strftime("%d/%m/%Y %H:%M") if previo.get("primera_consulta") else "fecha n/d"} · '
+                    f'veces consultado: {previo.get("veces_consultado", "?")} · se vuelve a consultar para traer datos frescos.</div>',
                     unsafe_allow_html=True
                 )
 
