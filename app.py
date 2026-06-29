@@ -674,8 +674,7 @@ elif tab == "Consulta CUIT":
       <div class="section-rule"></div>
       <p style="font-size:13px;color:#8BA5C0;margin-bottom:28px;">
         Consulta de constancia de inscripción en ARCA (ex AFIP) y situación
-        en la Central de Deudores del BCRA. Un CUIT por consulta — cada resultado
-        queda registrado en la base de trabajo diario para dejar constancia de revisión.
+        en la Central de Deudores del BCRA. Un CUIT por consulta.
       </p>
     </div>
     ''', unsafe_allow_html=True)
@@ -704,25 +703,8 @@ elif tab == "Consulta CUIT":
                 unsafe_allow_html=True
             )
         else:
-            previo = db.get_consulta_cuit(cuit_limpio)
-            if previo:
-                st.markdown(
-                    f'<div style="background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);'
-                    f'border-radius:3px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#F5C518;'
-                    f'font-family:Space Mono,monospace;">'
-                    f'YA CONSULTADO ANTES — primera vez: '
-                    f'{previo["primera_consulta"].strftime("%d/%m/%Y %H:%M") if previo.get("primera_consulta") else "fecha n/d"} · '
-                    f'veces consultado: {previo.get("veces_consultado", "?")} · se vuelve a consultar para traer datos frescos.</div>',
-                    unsafe_allow_html=True
-                )
-
             with st.spinner(f"Consultando {cuit_limpio}..."):
                 res = procesar_uno(cuit_limpio)
-
-            try:
-                db.upsert_consulta_cuit(cuit_limpio, res)
-            except Exception as e:
-                st.warning(f"No se pudo guardar en la base de datos: {e}")
 
             arca = res.get("arca", {})
             bcra = res.get("bcra_deuda", {})
