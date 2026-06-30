@@ -219,7 +219,7 @@ class _PDF(FPDF):
             self.set_text_color(237, 244, 248)
             self.set_font("Helvetica", "B", 14)
             x = self.get_x()
-            self.cell(w - 2, 9, valor, fill=True, align="C", ln=False)
+            self.cell(w - 2, 9, _strip_md(valor), fill=True, align="C", ln=False)
             self.set_x(x + w)
         self.ln(9)
         self.set_x(x0)
@@ -228,7 +228,7 @@ class _PDF(FPDF):
             self.set_font("Helvetica", "", 7)
             self.set_text_color(150, 170, 190)
             x = self.get_x()
-            self.cell(w - 2, 5, etiqueta.upper(), fill=True, align="C", ln=False)
+            self.cell(w - 2, 5, _strip_md(etiqueta).upper(), fill=True, align="C", ln=False)
             self.set_x(x + w)
         self.ln(8)
         self.set_text_color(0, 0, 0)
@@ -255,7 +255,7 @@ class _PDF(FPDF):
         self.set_fill_color(*color_rgb)
         self.set_text_color(237, 244, 248)
         self.set_x(10)
-        self.cell(190, 6, label.upper(), fill=True, ln=True)
+        self.cell(190, 6, _strip_md(label).upper(), fill=True, ln=True)
         self.set_text_color(30, 30, 30)
         self.set_font("Helvetica", "", 8)
         for i, est in enumerate(items, 1):
@@ -279,7 +279,7 @@ class _PDF(FPDF):
         self.set_font("Helvetica", "", 7.5)
         self.set_x(10)
         for (_, w), val in zip(cols, datos):
-            self.cell(w, 5, str(val)[:40], fill=True, border=0, ln=False)
+            self.cell(w, 5, _strip_md(str(val))[:40], fill=True, border=0, ln=False)
         self.ln(5)
 
 
