@@ -243,7 +243,7 @@ class _PDF(FPDF):
         self.set_font("Helvetica", "", 7.5)
         iy = y + 7
         for item in items:
-            texto = "• " + _strip_md(item)
+            texto = "- " + _strip_md(item)
             self.set_xy(x + 2, iy)
             self.multi_cell(w - 4, 4.5, texto)
             iy = self.get_y() + 1
