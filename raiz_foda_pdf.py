@@ -34,10 +34,19 @@ _EST_META = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _strip_md(text: str) -> str:
-    """Elimina markdown básico (**bold**, *italic*) para texto plano en PDF."""
+    """Elimina markdown y caracteres fuera de latin-1 para PDF con Helvetica."""
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
     text = re.sub(r"\*(.+?)\*",     r"\1", text)
-    return text
+    return (text
+        .replace("—", "-")   # em dash —
+        .replace("–", "-")   # en dash –
+        .replace("‘", "'")   # ' left single quote
+        .replace("’", "'")   # ' right single quote
+        .replace("“", '"')   # " left double quote
+        .replace("”", '"')   # " right double quote
+        .replace("…", "...")  # … ellipsis
+        .replace("·", ".")   # · middle dot (safe in latin-1 but can render oddly)
+    )
 
 
 def _cargar_bcra_para_raiz(df_raiz: pd.DataFrame):
@@ -175,10 +184,10 @@ class _PDF(FPDF):
         self.set_font("Helvetica", "B", 11)
         self.set_text_color(237, 244, 248)
         self.set_xy(10, 5)
-        self.cell(0, 8, self._titulo, ln=False)
+        self.cell(0, 8, _strip_md(self._titulo), ln=False)
         self.set_font("Helvetica", "", 8)
         self.set_xy(0, 5)
-        self.cell(200, 8, self._subtitulo, align="R", ln=False)
+        self.cell(200, 8, _strip_md(self._subtitulo), align="R", ln=False)
         self.set_text_color(0, 0, 0)
         self.ln(18)
 
@@ -195,7 +204,7 @@ class _PDF(FPDF):
         self.set_fill_color(14, 77, 95)
         self.set_text_color(237, 244, 248)
         self.set_x(10)
-        self.cell(190, 7, titulo.upper(), fill=True, ln=True)
+        self.cell(190, 7, _strip_md(titulo).upper(), fill=True, ln=True)
         self.set_text_color(0, 0, 0)
         self.ln(3)
 

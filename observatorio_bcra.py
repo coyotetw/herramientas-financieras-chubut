@@ -513,6 +513,54 @@ def render_observatorio_bcra():
             st.error(f"Error al conectar con la base de datos: {e}")
             return
 
+    # ── Panel de filtros ─────────────────────────────────────────
+    st.markdown('<div style="padding:0 48px;">', unsafe_allow_html=True)
+    with st.expander("Filtros", expanded=False, icon=":material/tune:"):
+        fc1, fc2, fc3, fc4 = st.columns([3, 2, 1, 1])
+
+        entidades_todas = sorted(df["entidad"].dropna().unique().tolist())
+        f_entidades = fc1.multiselect(
+            "Entidades financieras",
+            options=entidades_todas,
+            default=[],
+            placeholder="Todas las entidades",
+        )
+
+        sit_opciones = list(SIT_LABELS.values())
+        f_situaciones = fc2.multiselect(
+            "Situación crediticia",
+            options=sit_opciones,
+            default=[],
+            placeholder="Todas las situaciones",
+        )
+
+        f_solo_chubut = fc3.toggle("Solo Banco Chubut", value=False)
+        f_solo_raiz   = fc4.toggle("Solo Raíz Emprendedora", value=False)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Aplicar filtros ───────────────────────────────────────────
+    df_f = df.copy()
+    if f_entidades:
+        df_f = df_f[df_f["entidad"].isin(f_entidades)]
+    if f_situaciones:
+        sit_nums = [k for k, v in SIT_LABELS.items() if v in f_situaciones]
+        df_f = df_f[df_f["situacion"].isin(sit_nums)]
+    if f_solo_chubut:
+        df_f = df_f[df_f["es_chubut"]]
+    if f_solo_raiz:
+        raiz_cuits = set(df_raiz["cuit"].astype(str).str.strip())
+        df_f = df_f[df_f["cuit"].astype(str).isin(raiz_cuits)]
+
+    hay_filtro = bool(f_entidades or f_situaciones or f_solo_chubut or f_solo_raiz)
+    if hay_filtro:
+        n_total = df["cuit"].nunique()
+        n_filtrado = df_f["cuit"].nunique()
+        st.caption(
+            f":material/filter_alt: Filtro activo — mostrando **{n_filtrado:,}** de **{n_total:,}** CUITs"
+        )
+
+    df = df_f
     resumen = _resumen_por_cuit(df)
 
     # ── KPIs ─────────────────────────────────────────────────────
