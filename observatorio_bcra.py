@@ -708,3 +708,9 @@ def render_observatorio_bcra():
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<div style='height:32px;'></div>", unsafe_allow_html=True)
+
+    # ── Exportar PDF ──────────────────────────────────────────────
+    st.markdown('<div style="padding:0 48px;margin-top:8px;">', unsafe_allow_html=True)
+    from raiz_foda_pdf import render_export_pdf_observatorio
+    render_export_pdf_observatorio(df, resumen, df_raiz, foda)
+    st.markdown("</div>", unsafe_allow_html=True)

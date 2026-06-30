@@ -456,3 +456,197 @@ def render_export_pdf(df_raiz: pd.DataFrame, foda: dict | None, filtros_desc: st
                 st.error(f"Error generando PDF: {e}")
                 import traceback
                 st.code(traceback.format_exc())
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PDF OBSERVATORIO BCRA
+# ─────────────────────────────────────────────────────────────────────────────
+
+def generar_pdf_observatorio(
+    df: pd.DataFrame,
+    resumen: pd.DataFrame,
+    df_raiz: pd.DataFrame,
+    foda: dict | None,
+) -> bytes:
+    """Genera PDF del Observatorio BCRA: KPIs, tablas de entidades y FODA."""
+    today = datetime.date.today().strftime("%d/%m/%Y")
+    pdf = _PDF(
+        titulo="Observatorio Bancario BCRA — Herramientas Financieras Chubut",
+        subtitulo=today,
+    )
+    pdf.set_auto_page_break(auto=True, margin=14)
+    pdf.add_page()
+
+    # ── KPIs ──────────────────────────────────────────────────────────────────
+    total_cuits  = resumen["cuit"].nunique()
+    con_chubut   = resumen[resumen["tiene_chubut"]]["cuit"].nunique()
+    set_bcra     = set(df["cuit"].astype(str))
+    set_raiz     = set(df_raiz["cuit"].astype(str))
+    sin_hist     = len(set_raiz - set_bcra)
+    monto_total  = df[df["situacion"] >= 1]["monto"].sum()
+    monto_chubut = df[df["es_chubut"] & (df["situacion"] >= 1)]["monto"].sum()
+
+    pdf.sec("Indicadores clave del sistema")
+    pdf.kpi_row([
+        (f"{total_cuits:,}",                "CUITs en BCRA"),
+        (f"{con_chubut:,}",                 "Con Banco Chubut"),
+        (f"{sin_hist:,}",                   "Sin historial BCRA"),
+        (f"${monto_total/1_000_000:.1f}M",  "Monto total sistema"),
+        (f"${monto_chubut/1_000_000:.1f}M", "Monto Banco Chubut"),
+    ])
+    pdf.ln(2)
+
+    # ── Distribución de situaciones ────────────────────────────────────────────
+    pdf.sec("Distribucion de situaciones crediticias")
+    sit_order = ["Sin deuda", "Normal", "Riesgo bajo", "Riesgo medio", "Alto riesgo", "Irrecuperable"]
+    sit_counts = resumen["sit_label"].value_counts()
+    sit_dist = (
+        pd.DataFrame({"Situacion": sit_order})
+        .assign(CUITs=lambda d: d["Situacion"].map(sit_counts).fillna(0).astype(int))
+    )
+    sit_dist["Pct"] = (sit_dist["CUITs"] / len(resumen) * 100).map("{:.1f}%".format)
+
+    cols_sit = [("Situacion", 100), ("CUITs", 45), ("% del total", 45)]
+    pdf.tabla_header(cols_sit)
+    for i, row in sit_dist.iterrows():
+        pdf.tabla_fila(
+            [str(row["Situacion"]), str(row["CUITs"]), str(row["Pct"])],
+            cols_sit, fill=(i % 2 == 0),
+        )
+    pdf.ln(6)
+
+    # ── Top entidades por CUITs ────────────────────────────────────────────────
+    pdf.sec("Top entidades — por cantidad de CUITs")
+    top_cuits_df = (
+        df.groupby("entidad")["cuit"].nunique()
+        .sort_values(ascending=False)
+        .head(12)
+        .reset_index()
+    )
+    top_cuits_df.columns = ["Entidad", "CUITs"]
+    top_cuits_df["Pct"] = (top_cuits_df["CUITs"] / total_cuits * 100).map("{:.1f}%".format)
+
+    cols_ent = [("Entidad", 120), ("CUITs", 35), ("% del total", 35)]
+    pdf.tabla_header(cols_ent)
+    for i, row in top_cuits_df.iterrows():
+        pdf.tabla_fila(
+            [str(row["Entidad"]), str(row["CUITs"]), str(row["Pct"])],
+            cols_ent, fill=(i % 2 == 0),
+        )
+
+    # ── Pagina 2: Top por monto + FODA ────────────────────────────────────────
+    pdf.add_page()
+
+    pdf.sec("Top entidades — por monto acumulado (situacion >= 1)")
+    top_monto_df = (
+        df[df["situacion"] >= 1]
+        .groupby("entidad")["monto"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(12)
+        .reset_index()
+    )
+    top_monto_df.columns = ["Entidad", "Monto"]
+    top_monto_df["Monto"] = top_monto_df["Monto"].map("${:,.0f}".format)
+
+    cols_mon = [("Entidad", 130), ("Monto ($)", 60)]
+    pdf.tabla_header(cols_mon)
+    for i, row in top_monto_df.iterrows():
+        pdf.tabla_fila(
+            [str(row["Entidad"]), str(row["Monto"])],
+            cols_mon, fill=(i % 2 == 0),
+        )
+    pdf.ln(8)
+
+    if foda:
+        pdf.sec("FODA Estrategico — Raiz Emprendedora & Sistema Bancario Chubut")
+        cw, ch = 94, 68
+        lm  = 10
+        mid = lm + cw + 2
+        colores = {
+            "Fortalezas":    (14,  77,  95),
+            "Oportunidades": (27,  127, 145),
+            "Debilidades":   (180, 80,  20),
+            "Amenazas":      (180, 30,  30),
+        }
+        y0 = pdf.get_y()
+        pdf.foda_celda("Fortalezas",    foda["fortalezas"],    lm,  y0,           cw, ch, colores["Fortalezas"])
+        pdf.foda_celda("Oportunidades", foda["oportunidades"], mid, y0,           cw, ch, colores["Oportunidades"])
+        pdf.foda_celda("Debilidades",   foda["debilidades"],   lm,  y0 + ch + 2, cw, ch, colores["Debilidades"])
+        pdf.foda_celda("Amenazas",      foda["amenazas"],      mid, y0 + ch + 2, cw, ch, colores["Amenazas"])
+        pdf.set_y(y0 + 2 * ch + 8)
+
+        # Pagina 3: estrategias
+        pdf.add_page()
+        pdf.sec("Estrategias Cruzadas")
+        colores_est = {
+            "FO": (52,  211, 153),
+            "DO": (244, 180, 26),
+            "FA": (27,  127, 145),
+            "DA": (232, 93,  54),
+        }
+        for key, (label, _, _c) in _EST_META.items():
+            if key in foda.get("estrategias", {}):
+                pdf.estrategia_bloque(label, foda["estrategias"][key], colores_est[key])
+
+    buf = io.BytesIO()
+    pdf.output(buf)
+    return buf.getvalue()
+
+
+def render_export_pdf_observatorio(
+    df: pd.DataFrame,
+    resumen: pd.DataFrame,
+    df_raiz: pd.DataFrame,
+    foda: dict | None,
+):
+    """Seccion de exportacion PDF al pie del Observatorio BCRA."""
+    st.markdown("""
+    <div style="font-size:18px;font-weight:700;font-family:'Barlow Condensed',sans-serif;
+         color:#EDF4F8;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">
+      Exportar Reporte PDF — Observatorio BCRA
+    </div>
+    <div style="height:2px;background:rgba(91,184,212,0.25);margin-bottom:14px;"></div>
+    """, unsafe_allow_html=True)
+
+    total      = resumen["cuit"].nunique()
+    con_chubut = resumen[resumen["tiene_chubut"]]["cuit"].nunique()
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("CUITs en el sistema", f"{total:,}")
+    c2.metric("Con Banco Chubut", f"{con_chubut:,}")
+    c3.metric("Fecha", datetime.date.today().strftime("%d/%m/%Y"))
+
+    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background:rgba(91,184,212,0.05);border:1px solid rgba(91,184,212,0.15);
+         border-radius:8px;padding:16px 20px;font-size:13px;color:#C8D8E8;margin-bottom:20px;">
+      <strong style="color:#EDF4F8;">El reporte incluye:</strong>
+      <ul style="margin:8px 0 0 16px;padding:0;">
+        <li>Indicadores clave del sistema BCRA</li>
+        <li>Distribucion de situaciones crediticias por CUIT</li>
+        <li>Top 12 entidades por cantidad de CUITs</li>
+        <li>Top 12 entidades por monto acumulado</li>
+        <li>Matriz FODA estrategica data-driven</li>
+        <li>Estrategias cruzadas FO · DO · FA · DA</li>
+      </ul>
+    </div>""", unsafe_allow_html=True)
+
+    if st.button("Generar PDF Observatorio", type="primary", key="pdf_obs_generar"):
+        with st.spinner("Generando reporte PDF..."):
+            try:
+                pdf_bytes = generar_pdf_observatorio(df, resumen, df_raiz, foda)
+                nombre = f"observatorio_bcra_{datetime.date.today().strftime('%Y%m%d')}.pdf"
+                st.download_button(
+                    label="Descargar PDF",
+                    data=pdf_bytes,
+                    file_name=nombre,
+                    mime="application/pdf",
+                    type="primary",
+                    key="pdf_obs_download",
+                )
+                st.success(f"PDF generado · {total:,} CUITs en el sistema.")
+            except Exception as e:
+                st.error(f"Error generando PDF: {e}")
+                import traceback
+                st.code(traceback.format_exc())
